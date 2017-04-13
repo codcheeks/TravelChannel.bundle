@@ -1,6 +1,6 @@
 NAME = 'Travel Network'
 PREFIX = '/video/travel'
-ICON = 'icon-default.png'
+ICON = 'icon-default.jpg'
 
 BASE_URL = 'http://www.travelchannel.com'
 
@@ -17,7 +17,7 @@ def Start():
     HTTP.CacheTime = CACHE_1HOUR
 
 ####################################################################################################
-@handler(PREFIX, NAME)
+@handler(PREFIX, NAME, thumb=ICON)
 def MainMenu():
 
     oc = ObjectContainer()
@@ -71,6 +71,7 @@ def MoreShows(title):
         return ObjectContainer(header='Empty', message='There are no shows to list')
     else:
         return oc
+
 ####################################################################################################
 # This function pulls the video link from a show's main page
 @route(PREFIX + '/getvideolink')
@@ -81,11 +82,13 @@ def GetVideoLinks(title, show_url):
 
     # The Videos link can vary 
     for item in page.xpath('//li[contains(@class, "subNavigationItem")]'):
+
         section_title = item.xpath('./a/text()')[0].strip()
         # Skip any the navigation items that are not for videos
         if 'video' not in section_title.lower() and 'full episodes' not in section_title.lower():
             continue
         section_url = item.xpath('./a/@href')[0]
+
         if not section_url.startswith('http://'):
            section_url = BASE_URL + section_url
 
@@ -98,6 +101,7 @@ def GetVideoLinks(title, show_url):
         return ObjectContainer(header='Empty', message='There are no videos for this show')
     else:
         return oc
+
 ####################################################################################################
 # This function produces a list of videos from a playlist
 @route(PREFIX + '/videobrowse')
@@ -105,13 +109,13 @@ def VideoBrowse(url, title):
 
     oc = ObjectContainer(title2=title)
     page = HTML.ElementFromURL(url)
-    
+
     json_list = page.xpath('//div[@class="videoplaylist-item"]/@data-videoplaylist-data')
-    
+
     for video in json_list:
         try: json = JSON.ObjectFromString(video)
         except: json = None
-        
+
         if json:
             smil_url = json['releaseUrl']
             if 'link.theplatform.com' in smil_url:
@@ -124,7 +128,7 @@ def VideoBrowse(url, title):
                         thumb = BASE_URL + json['thumbnailUrl']
                     )
                 )
-        
+
     if len(oc) < 1:
         return ObjectContainer(header='Empty', message='There are currently no videos for this listing')
     else:
